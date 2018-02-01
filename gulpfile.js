@@ -12,9 +12,9 @@ var pallyAudit = require('./_modules/pallyAudit.js');
 
 gulp.task('generate-files', function (auditFinished) {
   var args = util.getArguments(process.argv);
-  var generator, folder, options = {};
   var spinnerMessage = (args.json) ? 'reading config... ' : 'generating sitemap... ';
   var sitemapSpinner = new Spinner(spinnerMessage);
+  var folder, options = {};
 
   if (!args.url) {
     throw new gutil.PluginError({
