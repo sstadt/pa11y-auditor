@@ -1,8 +1,10 @@
 
 var gutil = require('gulp-util');
 var stream = require('stream');
+var q = require('q');
+var fs = require('fs');
 
-module.exports = {
+var util = {
   getArguments(argList) {
     let arg = {}, a, opt, thisOpt, curOpt;
 
@@ -37,5 +39,21 @@ module.exports = {
     }
 
     return src;
+  },
+  getExistingJson(path) {
+    var deferred = q.defer();
+
+    fs.readFile(path, function (err, json) {
+      if (json) {
+        let config = JSON.parse(json);
+        deferred.resolve(config.urls);
+      } else {
+        deferred.reject(`File not found at ${path}`);
+      }
+    });
+
+    return deferred.promise;
   }
 };
+
+module.exports = util;

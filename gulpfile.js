@@ -12,31 +12,6 @@ var util = require('./_modules/util.js');
 var sitemapUtil = require('./_modules/sitemap.js');
 var pallyAudit = require('./_modules/pallyAudit.js');
 
-function getExistingJson(path) {
-  var deferred = q.defer();
-
-  fs.readFile(path, function (err, json) {
-    if (json) {
-      let config = JSON.parse(json);
-      deferred.resolve(config.urls);
-    } else {
-      deferred.reject(`File not found at ${path}`);
-    }
-  });
-
-  return deferred.promise;
-}
-
-function getCrawlList(options) {
-  if (options.path) {
-    return getExistingJson(options.path);
-  } else if (options.site) {
-    return sitemapUtil.generateSitemap(options.site);
-  }
-
-  return q.reject('Must provide either a site to generate a sitemap for or a json config containing a list of URLs to crawl');
-}
-
 gulp.task('generate-files', function (auditFinished) {
   var args = util.getArguments(process.argv);
   var generator, folder, options = {};
@@ -58,7 +33,7 @@ gulp.task('generate-files', function (auditFinished) {
   options.site = args.url;
   if (args.json) options.path = args.json;
 
-  getCrawlList(options)
+  sitemapUtil.getCrawlList(options)
     .then(function (crawlList) {
       sitemapSpinner.stop();
       console.log('starting audit...');

@@ -64,6 +64,15 @@ var sitemap = {
     });
 
     return deferred.promise;
+  },
+  getCrawlList(options) {
+    if (options.path) {
+      return util.getExistingJson(options.path);
+    } else if (options.site) {
+      return sitemap.generateSitemap(options.site);
+    }
+
+    return q.reject('Must provide either a site to generate a sitemap for or a json config containing a list of URLs to crawl');
   }
 };
 
