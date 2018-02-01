@@ -5,8 +5,6 @@ var gutil = require('gulp-util');
 var copy = require('gulp-copy');
 var Spinner = require('cli-spinner').Spinner;
 var runSequence = require('run-sequence');
-var q = require('q');
-var fs = require('fs');
 
 var util = require('./_modules/util.js');
 var sitemapUtil = require('./_modules/sitemap.js');
