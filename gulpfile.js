@@ -67,7 +67,8 @@ gulp.task('generate-files', function (auditFinished) {
     }).then(function (auditResults) {
       // parse audit/generate counts
       var fullAudit = pallyAudit.parseAudit(auditResults);
-      util.stringSource('audit.json', JSON.stringify(fullAudit)).pipe(gulp.dest(`./audits/${folder}/`));
+      util.stringSource('audit.json', JSON.stringify(fullAudit))
+        .pipe(gulp.dest(`./audits/${folder}/`));
     }).fail(function (reason) {
       // there was an error
       sitemapSpinner.stop();
