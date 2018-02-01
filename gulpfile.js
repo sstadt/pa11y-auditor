@@ -11,46 +11,6 @@ var fs = require('fs');
 var util = require('./_modules/util.js');
 var sitemapUtil = require('./_modules/sitemap.js');
 var pallyAudit = require('./_modules/pallyAudit.js');
-var SitemapGenerator = require('sitemap-generator');
-
-const SITEMAP_PATH = './temp/sitemap.xml';
-
-function generateSitemap(url) {
-  var deferred = q.defer();
-  var sitemapSpinner = new Spinner('generating sitemap...');
-
-  generator = SitemapGenerator(url, {
-    filepath: SITEMAP_PATH,
-    crawlerMaxDepth: 2
-  });
-
-  sitemapSpinner.setSpinnerString('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏');
-  sitemapSpinner.start();
-
-  // register event listeners
-  generator.on('done', function () {
-    fs.readFile(SITEMAP_PATH, function (err, sitemapXml) {
-      // generate sitemap
-      sitemapUtil.generateJson(sitemapXml)
-        .then(function (jsonResults) {
-          deferred.resolve(jsonResults.urls);
-        }).fail(function (reason) {
-          deferred.reject(reason);
-        }).done(function () {
-          sitemapSpinner.stop();
-          console.log(' done!');
-        });
-    });
-  });
-
-  // error happened
-  generator.on('error', (reason) => deferred.reject(reason));
-
-  // start the crawler
-  generator.start();
-
-  return deferred.promise;
-}
 
 function getExistingJson(path) {
   var deferred = q.defer();
@@ -71,7 +31,7 @@ function getCrawlList(options) {
   if (options.path) {
     return getExistingJson(options.path);
   } else if (options.site) {
-    return generateSitemap(options.site);
+    return sitemapUtil.generateSitemap(options.site);
   }
 
   return q.reject('Must provide either a site to generate a sitemap for or a json config containing a list of URLs to crawl');
@@ -80,6 +40,8 @@ function getCrawlList(options) {
 gulp.task('generate-files', function (auditFinished) {
   var args = util.getArguments(process.argv);
   var generator, folder, options = {};
+  var spinnerMessage = (args.json) ? 'reading config... ' : 'generating sitemap... ';
+  var sitemapSpinner = new Spinner(spinnerMessage);
 
   if (!args.url) {
     throw new gutil.PluginError({
@@ -89,12 +51,17 @@ gulp.task('generate-files', function (auditFinished) {
     auditFinished();
   }
 
+  sitemapSpinner.setSpinnerString('⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏');
+  sitemapSpinner.start();
+
   folder = args.url.replace(/(https?)|\/|:/g, '');
   options.site = args.url;
   if (args.json) options.path = args.json;
 
   getCrawlList(options)
     .then(function (crawlList) {
+      sitemapSpinner.stop();
+      console.log('starting audit...');
       // start pa11y audit
       return pallyAudit.auditSite(crawlList);
     }).then(function (auditResults) {
@@ -103,6 +70,8 @@ gulp.task('generate-files', function (auditFinished) {
       util.stringSource('audit.json', JSON.stringify(fullAudit)).pipe(gulp.dest(`./audits/${folder}/`));
     }).fail(function (reason) {
       // there was an error
+      sitemapSpinner.stop();
+      console.log(' error!');
       console.log(reason);
     }).done(function () {
       // finished, end gulp task

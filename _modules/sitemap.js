@@ -3,20 +3,37 @@ var gulp = require('gulp');
 var q = require('q');
 var SitemapGenerator = require('sitemap-generator');
 var xml2js = require('xml2js');
+var fs = require('fs');
 
 var parser = new xml2js.Parser();
 var util = require('./util.js');
 
+const SITEMAP_PATH = './temp/sitemap.xml';
+
 var sitemap = {
-  // TODO: this gives a 404 error every time I try to move the sitemap generation out of gulpfile
-  generate: function (url) {
+  generateSitemap: function (url) {
     var deferred = q.defer();
-    var generator = SitemapGenerator(url);
-    console.log(url);
+
+    generator = SitemapGenerator(url, {
+      filepath: SITEMAP_PATH,
+      crawlerMaxDepth: 2
+    });
 
     // register event listeners
-    generator.on('done', function () { deferred.resolve(); });
-    generator.on('error', function (error) { deferred.reject(error); });
+    generator.on('done', function () {
+      fs.readFile(SITEMAP_PATH, function (err, sitemapXml) {
+        // generate sitemap
+        sitemap.generateJson(sitemapXml)
+          .then(function (jsonResults) {
+            deferred.resolve(jsonResults.urls);
+          }).fail(function (reason) {
+            deferred.reject(reason);
+          });
+      });
+    });
+
+    // error happened
+    generator.on('error', (reason) => deferred.reject(reason));
 
     // start the crawler
     generator.start();
