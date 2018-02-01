@@ -31,4 +31,6 @@ gulp audit --url "http://someurl.com/" --json "/path/to/urls.json"
 
 Large sites can take some time to generate a sitemap, be patient! If you suspect the sitemap is taking too long, plug your URL into a sitemap generator like [this one](https://www.xml-sitemaps.com/). If the user agent is being blocked, you will see an error when attempting to crawl the site.
 
+Successful audits will be deposit an `audit.json` at `./audits/{site}/`. This file will a list of error codes along with their counts, followed by a full list of the errors encountered during the audit.
+
 *To respect the privacy of the companies being audited all audit results are ignored by git.*
